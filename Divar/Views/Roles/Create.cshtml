@@ -1,0 +1,44 @@
+﻿@model Divar.ViewModel.CreateRoleViewModel
+
+<br />
+<div style="text-align: center;">
+    <h3>   <a asp-action="Index" asp-controller="Admin" style="text-decoration: none;">بازگشت به پنل ادمین</a>  </h3>
+</div>
+<hr />
+
+<br />
+<h2 class="text-center">ایجاد نقش جدید</h2>
+
+<form asp-action="Create" method="post" style="max-width: 400px; margin: auto;">
+    <div class="form-group text-center">
+        <input type="text" asp-for="Name" class="form-control text-center" style="width: 100%; margin: auto;" placeholder="نام نقش را وارد کنید" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="text-center">
+        <a asp-action="List" class="btn btn-secondary">بازگشت به لیست نقش‌ها</a>
+        <button type="submit" class="btn btn-primary">ایجاد</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
+<style>
+    .form-group {
+        text-align: center;
+    }
+    .form-control {
+        display: inline-block;
+        text-align: center;
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+    button, a {
+        margin: 5px;
+    }
+</style>

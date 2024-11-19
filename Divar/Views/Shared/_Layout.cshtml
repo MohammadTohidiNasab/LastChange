@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Divar</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Divar.styles.css" asp-append-version="true" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فروشگاه وسایل دسته دوم</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="~/css/Layout.css" />
+</head>
+
+
+
+
+<body>
+
+    <header>
+        <h1> آگهی ها</h1>
+        <nav>
+            <ul>
+
+                <li class="dropdown">
+                    <a asp-action="Index" asp-controller="Comment">
+                        ارتباط با ما
+                    </a>
+                </li>
+
+
+
+
+                <li>
+                    @if (Context.Session.GetString("UserEmail") != null)
+                    {
+                    <li>
+                        <a asp-action="Dashboard" asp-controller="Home">پنل کاربری</a>
+                    </li>
+                    }
+                </li>
+
+
+                <li class="dropdown">
+                     <a asp-action="Index" asp-controller="home">
+                        خانه
+                     </a>
+                </li>
+
+                <li>
+                    @if (Context.Session.GetString("UserEmail") != null)
+                    {
+                    <li><a asp-action="Logout" asp-controller="user"> خروج از حساب</a></li>
+                    }
+                    else
+                    {
+                    <li><a asp-action="Login" asp-controller="user"> ورود به حساب</a></li>
+                    }
+                </li>
+
+                <li class="dropdown">
+                    <button> دسته بندی ها </button>
+                    <div class="dropdown-content">
+
+                        @await Component.InvokeAsync("Categories")
+
+                    </div>
+                </li>
+
+               <li>
+                    @if (Context.Session.GetString("UserEmail") != null)
+                    {
+                    <li> <a asp-action="SelectCategory" asp-controller="Home">ثبت اگهی</a></li>
+                    }
+                    else
+                    {
+                    <li><a asp-action="Login" asp-controller="user"> ثبت اگهی</a></li>
+                    }
+               </li>
+
+            </ul>
+        </nav>
+    </header>
+
+
+
+            @RenderBody()
+
+
+
+    <footer class="border-top footer text-muted">
+
+    </footer>
+
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+
+</html>
