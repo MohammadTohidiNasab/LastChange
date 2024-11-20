@@ -16,8 +16,8 @@ builder.Services.AddIdentity<CustomUser, IdentityRole>()
 // Register repositories
 builder.Services.AddScoped<IAdminRepository>(sp => new AdoAdminRepository(cnnString));
 builder.Services.AddScoped<IAdvertisementRepository, EfAdvertisementRepository>();
+builder.Services.AddScoped<IUserRepository>(sp => new AdoUserRepository(cnnString));
 
-builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 //تنظیمات پسورد
 builder.Services.Configure<IdentityOptions>(c =>
 {

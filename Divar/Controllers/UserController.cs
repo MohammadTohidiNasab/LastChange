@@ -2,16 +2,14 @@
 {
     public class UserController : Controller
     {
-        private readonly UserManager<CustomUser> _userManager;
-        private readonly SignInManager<CustomUser> _signInManager;
+        private readonly IUserRepository _userRepository;
 
-        public UserController(UserManager<CustomUser> userManager, SignInManager<CustomUser> signInManager)
+        public UserController(IUserRepository userRepository)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
+            _userRepository = userRepository;
         }
 
-        // Register controller
+        // Register
         [HttpGet]
         public IActionResult Register()
         {
@@ -23,29 +21,31 @@
         {
             if (ModelState.IsValid)
             {
+                var emailExists = await _userRepository.EmailExistsAsync(model.Email);
+                if (emailExists)
+                {
+                    ModelState.AddModelError("", "ایمیل قبلا ثبت شده است");
+                    return View(model);
+                }
+
                 var user = new CustomUser
                 {
+                    Id = Guid.NewGuid().ToString(),
                     UserName = model.Email,
                     Email = model.Email,
                     FirstName = model.FirstName,
                     LastName = model.LastName,
-                    PhoneNumber = model.PhoneNumber
+                    PhoneNumber = model.PhoneNumber,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password) // رمزگذاری
                 };
-                var result = await _userManager.CreateAsync(user, model.Password);
 
-                if (result.Succeeded)
-                {
-                    return RedirectToAction("Login", "User");
-                }
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
+                await _userRepository.AddUserAsync(user);
+                return RedirectToAction("Login", "User");
             }
             return View(model);
         }
 
-        // Login controller
+        // Login
         [HttpGet]
         public IActionResult Login()
         {
@@ -57,39 +57,26 @@
         {
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
-
-                if (result.Succeeded)
+                var user = await _userRepository.GetUserByEmailAsync(model.Email);
+                if (user != null && BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
                 {
-                    // Get user info
-                    var user = await _userManager.FindByEmailAsync(model.Email);
-                    if (user != null)
-                    {
-                        // Set session variables
-                        HttpContext.Session.SetString("FirstName", user.FirstName);
-                        HttpContext.Session.SetString("LastName", user.LastName);
-                        HttpContext.Session.SetString("UserEmail", user.Email);
-                        HttpContext.Session.SetString("UserId",user.Id);
-                    }
+                    HttpContext.Session.SetString("FirstName", user.FirstName ?? "");
+                    HttpContext.Session.SetString("LastName", user.LastName ?? "");
+                    HttpContext.Session.SetString("UserEmail", user.Email);
+                    HttpContext.Session.SetString("UserId", user.Id);
 
                     return RedirectToAction("Index", "Home");
                 }
 
-                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                ModelState.AddModelError(string.Empty, "ورود نامعتبر");
             }
             return View(model);
         }
 
-
         // Logout
-        public async Task<IActionResult> Logout()
+        public IActionResult Logout()
         {
-            HttpContext.Session.Remove("FirstName");
-            HttpContext.Session.Remove("LastName");
-            HttpContext.Session.Remove("UserEmail");
-            HttpContext.Session.Remove("UserId");
-
-            await _signInManager.SignOutAsync();
+            HttpContext.Session.Clear();
             return RedirectToAction("Index", "Home");
         }
     }
