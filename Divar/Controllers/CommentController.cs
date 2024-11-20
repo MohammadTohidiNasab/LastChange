@@ -9,6 +9,7 @@
             _connectionString = "Server=.; Initial Catalog=Divar; Integrated Security=True; encrypt=False";
         }
 
+
         // Create comment
         [HttpGet]
         public IActionResult Create()
@@ -37,6 +38,8 @@
             return View(comment);
         }
 
+
+
         // Comment list
         public async Task<IActionResult> Index()
         {
@@ -64,7 +67,6 @@
 
 
 
-
         // Edit comment
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
@@ -84,14 +86,14 @@
                     {
                         Id = reader.GetInt32(0),
                         Body = reader.GetString(1),
-                        CreatedDate = reader.GetDateTime(2) // اگر به آن نیاز دارید
+                        CreatedDate = reader.GetDateTime(2)
                     };
                 }
             }
 
             if (comment == null)
             {
-                return NotFound(); // اگر کامنت پیدا نشد
+                return NotFound();
             }
 
             return View(comment);
@@ -110,7 +112,7 @@
 
                     command.Parameters.AddWithValue("@Id", comment.Id);
                     command.Parameters.AddWithValue("@Body", comment.Body);
-                    command.Parameters.AddWithValue("@UpdatedDate", DateTime.Now); // اگر زمان به‌روزرسانی را می‌خواهید
+                    command.Parameters.AddWithValue("@UpdatedDate", DateTime.Now); 
 
                     await command.ExecuteNonQueryAsync();
                 }
@@ -118,8 +120,5 @@
             }
             return View(comment);
         }
-
-
     }
-
 }

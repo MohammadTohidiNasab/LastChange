@@ -13,8 +13,7 @@
         }
 
 
-
-        //List of roles         /Roles/List
+        //List of roles  
         public IActionResult List()
         {
             var roles = _roleManager.Roles.ToList();
@@ -22,8 +21,6 @@
         }
 
 
-
-        //create roles
 
         // Create action (GET)
         public IActionResult Create()
@@ -50,7 +47,8 @@
         }
 
 
-        // ویرایش نقش (GET)
+
+        // ویرایش نقش
         public async Task<IActionResult> Edit(string id)
         {
             var role = await _roleManager.FindByIdAsync(id);
@@ -91,6 +89,7 @@
             return View(model);
         }
 
+
         // حذف نقش
         public async Task<IActionResult> Delete(string id)
         {
@@ -119,8 +118,9 @@
             return View(role);
         }
 
-
+         //
         //add role to users
+       //
         public IActionResult SelectUser()
         {
             // نمایش لیست کاربران برای انتخاب
@@ -192,5 +192,4 @@
             return RedirectToAction("List");
         }
     }
-
 }

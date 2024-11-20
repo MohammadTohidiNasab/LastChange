@@ -26,8 +26,9 @@
     }
 
 
+
+
     //حذف کاربر
-   // [Authorize(Roles = "Editor")]
     public async Task<IActionResult> DeleteUser(string id)
     {
         var user = await _adminRepository.GetUserByIdAsync(id);
