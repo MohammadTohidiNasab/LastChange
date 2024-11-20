@@ -2,7 +2,7 @@
 
 
 
- -- Stored Procedure   برای افزودن کامنت
+ --    برای افزودن کامنت
 CREATE PROCEDURE sp_InsertComment
     @Body NVARCHAR(400),
     @CreatedDate DATETIME
@@ -11,21 +11,35 @@ BEGIN
     INSERT INTO Comments (Body, CreatedDate)
     VALUES (@Body, @CreatedDate)
 END
+GO
 
 
 
-
--- Stored Procedure برای گرفتن لیست کاربران
+--  برای گرفتن لیست کاربران
 CREATE PROCEDURE GetUsers
 AS
 BEGIN
-    SELECT * FROM AspNetUsers;
+    SELECT 
+        Id,
+        FirstName,
+        LastName,
+        PhoneNumber,
+        UserName,
+        NormalizedUserName,
+        Email,
+        NormalizedEmail,
+        PasswordHash,
+        SecurityStamp,
+        ConcurrencyStamp,
+        LockoutEnabled
+    FROM AspNetUsers;
 END
 GO
 
 
 
--- Stored Procedure برای گرفتن لیست آگهی‌ها
+
+--  برای گرفتن لیست آگهی‌ها
 CREATE PROCEDURE GetAdvertisements
 AS
 BEGIN
@@ -57,28 +71,43 @@ GO
 
 
 
--- Stored Procedure برای گرفتن لیست کامنت‌ها
+--  برای گرفتن لیست کامنت‌ها
 CREATE PROCEDURE GetComments
 AS
 BEGIN
-    SELECT * FROM Comments;
+    SELECT Id,Body,CreatedDate FROM Comments;
 END
 GO
 
 
 
--- Stored Procedure برای گرفتن کاربر بر اساس شناسه
+
+--  برای گرفتن کاربر بر اساس شناسه
 CREATE PROCEDURE GetUserById
     @Id NVARCHAR(450)
 AS
 BEGIN
-    SELECT * FROM AspNetUsers WHERE Id = @Id;
+    SELECT 
+        Id,
+        FirstName,
+        LastName,
+        PhoneNumber,
+        UserName,
+        NormalizedUserName,
+        Email,
+        NormalizedEmail,
+        PasswordHash,
+        SecurityStamp,
+        ConcurrencyStamp,
+        LockoutEnabled
+    FROM AspNetUsers WHERE Id = @Id;
 END
 GO
 
 
 
--- Stored Procedure برای حذف کاربر و آگهی‌های مربوط به آن
+
+--  برای حذف کاربر و آگهی‌های مربوط به آن
 CREATE PROCEDURE DeleteUserAndAdvertisements
     @Id NVARCHAR(450)
 AS
@@ -90,12 +119,15 @@ GO
 
 
 
+
+-- حذف کامنت
 CREATE PROCEDURE DeleteComment
     @Id INT
 AS
 BEGIN
     DELETE FROM Comments WHERE Id = @Id;
 END
+GO
 
 
 
