@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Divar.Controllers
 {
@@ -87,6 +88,64 @@ namespace Divar.Controllers
             return RedirectToAction("Index");
         }
 
-        // ریزرواشطر برای AssignRole به همان صورت
+
+        //اختصاص نقش به کاربران
+
+        public IActionResult AssignRole()
+        {
+            var users = _userManager.Users.ToList(); // تمامی کاربران را دریافت کنید
+            var roles = _context.Roles.Select(r => r.Name).ToList(); // تمامی نام نقش‌ها را دریافت کنید
+
+            var model = new AssignRoleViewModel
+            {
+                AvailableRoles = roles,
+                Users = users.Select(user => new SelectListItem
+                {
+                    Value = user.Id,
+                    Text = user.FirstName + " " + user.LastName
+                }).ToList()
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AssignRole(AssignRoleViewModel model)
+        {
+            if (string.IsNullOrEmpty(model.UserId) || model.SelectedRoles == null || !model.SelectedRoles.Any())
+            {
+                ModelState.AddModelError(string.Empty, "Invalid user or roles.");
+                return View(model); // return with error message
+            }
+
+            var user = await _userManager.FindByIdAsync(model.UserId);
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "User not found.");
+                return View(model); // return with error message
+            }
+
+            // Remove existing roles if any
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            if (currentRoles.Any())
+            {
+                await _userManager.RemoveFromRolesAsync(user, currentRoles);
+            }
+
+            // Assign new roles
+            var result = await _userManager.AddToRolesAsync(user, model.SelectedRoles);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return View(model); // return with error message
+            }
+
+            return RedirectToAction("Index"); // Redirect after successful assignment
+        }
+
+
     }
 }

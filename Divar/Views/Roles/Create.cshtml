@@ -1,37 +1,40 @@
-﻿@model Divar.Models.Role
+﻿@model IEnumerable<Divar.Models.CustomUser>
 
-@{
-    ViewData["Title"] = "Create Role";
-}
+<h2>نسبت دادن نقش به کاربر</h2>
 
-<h1>Create Role</h1>
-
-<form asp-action="Create" method="post">
-    <div class="form-group">
-        <label asp-for="Name"></label>
-        <input asp-for="Name" class="form-control" />
-        <span asp-validation-for="Name" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label for="Permissions">Select Permissions</label>
-        <div>
-            @foreach (var permission in ViewData["AccessLevels"] as List<Divar.Models.AccessLevel>)
+<form asp-action="AssignRole" method="post">
+    <div>
+        <label for="userId">انتخاب کاربر:</label>
+        <select id="userId" name="userId" required>
+            @foreach (var user in ViewData["Users"] as List<Divar.Models.CustomUser>)
             {
-                <div>
-                    <input type="checkbox" name="selectedPermissions" value="@permission" />
-                    <label>@permission</label>
-                </div>
+                <option value="@user.Id">@user.FirstName @user.LastName</option>
             }
-        </div>
+        </select>
     </div>
 
-    <button type="submit" class="btn btn-primary">Create</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    <div>
+        <label for="roleName">انتخاب نقش:</label>
+        <select id="roleName" name="roleNames" multiple required>
+            @foreach (var role in ViewData["Roles"] as List<string>)
+            {
+                <option value="@role">@role</option>
+            }
+        </select>
+    </div>
+
+    <button type="submit">نسبت دادن نقش</button>
 </form>
 
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+@if (!ViewData.ModelState.IsValid)
+{
+    <div>
+        <h4>خطا ها:</h4>
+        <ul>
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
 }
