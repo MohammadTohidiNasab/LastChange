@@ -1,17 +1,25 @@
-﻿namespace Divar.Controllers
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+
+namespace Divar.Controllers
 {
     public class RolesController : Controller
     {
-        private static List<Role> roles = new List<Role>();
+        private readonly DivarDbContext _context;
         private readonly UserManager<CustomUser> _userManager;
 
-        public RolesController(UserManager<CustomUser> userManager)
+        public RolesController(DivarDbContext context, UserManager<CustomUser> userManager)
         {
+            _context = context;
             _userManager = userManager;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            var roles = await _context.Roles.ToListAsync();
             return View(roles);
         }
 
@@ -23,12 +31,13 @@
         }
 
         [HttpPost]
-        public IActionResult Create(Role role, List<AccessLevel> selectedPermissions)
+        public async Task<IActionResult> Create(Role role, List<AccessLevel> selectedPermissions)
         {
             if (ModelState.IsValid)
             {
                 role.Permissions = selectedPermissions;
-                roles.Add(role);
+                _context.Roles.Add(role);
+                await _context.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
 
@@ -36,9 +45,9 @@
             return View(role);
         }
 
-        public IActionResult Edit(string name)
+        public async Task<IActionResult> Edit(int id)
         {
-            var role = roles.FirstOrDefault(r => r.Name == name);
+            var role = await _context.Roles.FindAsync(id);
             if (role == null)
             {
                 return NotFound();
@@ -49,14 +58,16 @@
         }
 
         [HttpPost]
-        public IActionResult Edit(Role updatedRole, List<AccessLevel> selectedPermissions)
+        public async Task<IActionResult> Edit(Role updatedRole, List<AccessLevel> selectedPermissions)
         {
             if (ModelState.IsValid)
             {
-                var role = roles.FirstOrDefault(r => r.Name == updatedRole.Name);
+                var role = await _context.Roles.FindAsync(updatedRole.Id);
                 if (role != null)
                 {
+                    role.Name = updatedRole.Name;
                     role.Permissions = selectedPermissions;
+                    await _context.SaveChangesAsync();
                 }
                 return RedirectToAction("Index");
             }
@@ -65,62 +76,17 @@
             return View(updatedRole);
         }
 
-        public IActionResult Delete(string name)
+        public async Task<IActionResult> Delete(int id)
         {
-            var role = roles.FirstOrDefault(r => r.Name == name);
+            var role = await _context.Roles.FindAsync(id);
             if (role != null)
             {
-                roles.Remove(role);
+                _context.Roles.Remove(role);
+                await _context.SaveChangesAsync();
             }
             return RedirectToAction("Index");
         }
 
-
-
-        public IActionResult AssignRole()
-        {
-            var users = _userManager.Users.ToList(); // دریافت لیست کاربران
-            ViewData["Roles"] = roles.Select(r => r.Name).ToList(); // لیست نقش‌ها
-            return View(users);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> AssignRole(string userId, string roleName)
-        {
-            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(roleName))
-            {
-                ModelState.AddModelError("", "User ID and Role name must be provided.");
-                return View(GetUsersWithRoles());
-            }
-
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            var result = await _userManager.AddToRoleAsync(user, roleName);
-            if (result.Succeeded)
-            {
-                return RedirectToAction("Index");
-            }
-
-            // اگر خطایی وجود داشت
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError("", error.Description);
-            }
-
-            return View(GetUsersWithRoles());
-        }
-
-        private List<CustomUser> GetUsersWithRoles()
-        {
-            var users = _userManager.Users.ToList(); // دریافت لیست کاربران
-            ViewBag.Roles = roles.Select(r => r.Name).ToList(); // لیست نقش‌ها
-            return users;
-        }
-
+        // ریزرواشطر برای AssignRole به همان صورت
     }
-
 }
