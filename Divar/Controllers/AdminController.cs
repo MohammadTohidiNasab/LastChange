@@ -1,4 +1,6 @@
-﻿public class AdminController : Controller
+﻿using Microsoft.AspNetCore.Authorization;
+
+public class AdminController : Controller
 {
     private readonly IAdminRepository _adminRepository;
 
@@ -7,8 +9,7 @@
         _adminRepository = adminRepository;
     }
 
-
-     //  لیست کامنت ها و کاربران  اگهی ها
+    [Authorize(Policy = nameof(AccessLevel.AdminIndex))] 
     public async Task<IActionResult> Index()
     {
         var users = await _adminRepository.GetUsersAsync();

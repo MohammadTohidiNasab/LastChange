@@ -18,6 +18,20 @@ builder.Services.AddScoped<IAdminRepository>(sp => new AdoAdminRepository(cnnStr
 builder.Services.AddScoped<IAdvertisementRepository, EfAdvertisementRepository>();
 builder.Services.AddScoped<IUserRepository>(sp => new AdoUserRepository(cnnString));
 
+
+
+
+
+builder.Services.AddAuthorization(options =>
+{
+    foreach (AccessLevel level in Enum.GetValues(typeof(AccessLevel)))
+    {
+        options.AddPolicy(level.ToString(), policy => policy.RequireClaim("Permission", level.ToString()));
+    }
+});
+
+
+
 //تنظیمات پسورد
 builder.Services.Configure<IdentityOptions>(c =>
 {
@@ -26,7 +40,7 @@ builder.Services.Configure<IdentityOptions>(c =>
     c.Password.RequireLowercase = true;
     c.Password.RequireUppercase = false;
     c.User.RequireUniqueEmail = true;
-    c.Password.RequireDigit = false; 
+    c.Password.RequireDigit = false;
 
 });
 

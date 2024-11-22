@@ -1,0 +1,25 @@
+﻿
+<h2>Roles</h2>
+<a asp-action="Create">Create New Role</a>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Permissions</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var role in Model)
+        {
+            <tr>
+                <td>@role.Name</td>
+                <td>@string.Join(", ", role.Permissions)</td>
+                <td>
+                    <a asp-action="Edit" asp-route-name="@role.Name">Edit</a> |
+                    <a asp-action="Delete" asp-route-name="@role.Name">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

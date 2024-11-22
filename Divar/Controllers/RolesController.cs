@@ -1,195 +1,126 @@
 ﻿namespace Divar.Controllers
 {
     public class RolesController : Controller
-
     {
-        private readonly RoleManager<IdentityRole> _roleManager;
+        private static List<Role> roles = new List<Role>();
         private readonly UserManager<CustomUser> _userManager;
 
-        public RolesController(RoleManager<IdentityRole> roleManager, UserManager<CustomUser> userManager)
+        public RolesController(UserManager<CustomUser> userManager)
         {
-            _roleManager = roleManager;
             _userManager = userManager;
         }
 
-
-        //List of roles  
-        public IActionResult List()
+        public IActionResult Index()
         {
-            var roles = _roleManager.Roles.ToList();
             return View(roles);
         }
 
-
-
-        // Create action (GET)
+        [HttpGet]
         public IActionResult Create()
         {
+            ViewData["AccessLevels"] = Enum.GetValues(typeof(AccessLevel)).Cast<AccessLevel>().ToList();
             return View();
         }
+
         [HttpPost]
-        public async Task<IActionResult> Create(CreateRoleViewModel model)
+        public IActionResult Create(Role role, List<AccessLevel> selectedPermissions)
         {
             if (ModelState.IsValid)
             {
-                var identityRole = new IdentityRole(model.Name);
-                var result = await _roleManager.CreateAsync(identityRole);
-                if (result.Succeeded)
-                {
-                    return RedirectToAction("List");
-                }
-                foreach (var item in result.Errors)
-                {
-                    ModelState.AddModelError("", item.Description);
-                }
+                role.Permissions = selectedPermissions;
+                roles.Add(role);
+                return RedirectToAction("Index");
             }
-            return View(model);
+
+            ViewData["AccessLevels"] = Enum.GetValues(typeof(AccessLevel)).Cast<AccessLevel>().ToList();
+            return View(role);
         }
 
-
-
-        // ویرایش نقش
-        public async Task<IActionResult> Edit(string id)
+        public IActionResult Edit(string name)
         {
-            var role = await _roleManager.FindByIdAsync(id);
+            var role = roles.FirstOrDefault(r => r.Name == name);
             if (role == null)
             {
                 return NotFound();
             }
 
-            var model = new EditRoleViewModel { Id = role.Id, Name = role.Name };
-            return View(model);
+            ViewData["AccessLevels"] = Enum.GetValues(typeof(AccessLevel)).Cast<AccessLevel>().ToList();
+            return View(role);
         }
 
-        // ویرایش نقش (POST)
         [HttpPost]
-        public async Task<IActionResult> Edit(EditRoleViewModel model)
+        public IActionResult Edit(Role updatedRole, List<AccessLevel> selectedPermissions)
         {
             if (ModelState.IsValid)
             {
-                var role = await _roleManager.FindByIdAsync(model.Id);
-                if (role == null)
+                var role = roles.FirstOrDefault(r => r.Name == updatedRole.Name);
+                if (role != null)
                 {
-                    return NotFound();
+                    role.Permissions = selectedPermissions;
                 }
-
-                role.Name = model.Name;
-                var result = await _roleManager.UpdateAsync(role);
-
-                if (result.Succeeded)
-                {
-                    return RedirectToAction("List");
-                }
-
-                foreach (var item in result.Errors)
-                {
-                    ModelState.AddModelError("", item.Description);
-                }
+                return RedirectToAction("Index");
             }
-            return View(model);
+
+            ViewData["AccessLevels"] = Enum.GetValues(typeof(AccessLevel)).Cast<AccessLevel>().ToList();
+            return View(updatedRole);
+        }
+
+        public IActionResult Delete(string name)
+        {
+            var role = roles.FirstOrDefault(r => r.Name == name);
+            if (role != null)
+            {
+                roles.Remove(role);
+            }
+            return RedirectToAction("Index");
         }
 
 
-        // حذف نقش
-        public async Task<IActionResult> Delete(string id)
-        {
-            var role = await _roleManager.FindByIdAsync(id);
-            if (role == null)
-            {
-                return NotFound();
-            }
-            return View(role);
-        }
 
-        [HttpPost, ActionName("Delete")]
-        public async Task<IActionResult> DeleteConfirmed(string id)
+        public IActionResult AssignRole()
         {
-            var role = await _roleManager.FindByIdAsync(id);
-            if (role == null)
-            {
-                return NotFound();
-            }
-
-            var result = await _roleManager.DeleteAsync(role);
-            if (result.Succeeded)
-            {
-                return RedirectToAction("List");
-            }
-            return View(role);
-        }
-
-         //
-        //add role to users
-       //
-        public IActionResult SelectUser()
-        {
-            // نمایش لیست کاربران برای انتخاب
-            var users = _userManager.Users.ToList();
+            var users = _userManager.Users.ToList(); // دریافت لیست کاربران
+            ViewData["Roles"] = roles.Select(r => r.Name).ToList(); // لیست نقش‌ها
             return View(users);
         }
 
-        public async Task<IActionResult> ManageRole(string id)
-        {
-            if (id == null)
-            {
-                return RedirectToAction("SelectUser");
-            }
-
-            // Find the user by Id
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            // Get user roles and all roles
-            var userRoles = await _userManager.GetRolesAsync(user);
-            var allRoles = _roleManager.Roles.ToList();
-
-            // Create the ManageRoleViewModel including additional fields
-            var model = new ManageRoleViewModel
-            {
-                CustomUserId = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                UserRoles = userRoles.ToList(),
-                AllRoles = allRoles
-            };
-
-            return View(model);
-        }
-
-
-        // مدیریت نقش کاربران (POST)
         [HttpPost]
-        public async Task<IActionResult> ManageRole(ManageRoleViewModel model)
+        public async Task<IActionResult> AssignRole(string userId, string roleName)
         {
-            // پیدا کردن کاربر بر اساس Id
-            var user = await _userManager.FindByIdAsync(model.CustomUserId);
+            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(roleName))
+            {
+                ModelState.AddModelError("", "User ID and Role name must be provided.");
+                return View(GetUsersWithRoles());
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 return NotFound();
             }
 
-            // گرفتن نقش‌های کاربر فعلی
-            var userRoles = await _userManager.GetRolesAsync(user);
-            var rolesToAdd = model.Roles.Except(userRoles).ToList();
-            var rolesToRemove = userRoles.Except(model.Roles).ToList();
-
-            // اضافه کردن نقش‌ها
-            foreach (var role in rolesToAdd)
+            var result = await _userManager.AddToRoleAsync(user, roleName);
+            if (result.Succeeded)
             {
-                await _userManager.AddToRoleAsync(user, role);
+                return RedirectToAction("Index");
             }
 
-            // حذف نقش‌ها
-            foreach (var role in rolesToRemove)
+            // اگر خطایی وجود داشت
+            foreach (var error in result.Errors)
             {
-                await _userManager.RemoveFromRoleAsync(user, role);
+                ModelState.AddModelError("", error.Description);
             }
 
-            return RedirectToAction("List");
+            return View(GetUsersWithRoles());
         }
+
+        private List<CustomUser> GetUsersWithRoles()
+        {
+            var users = _userManager.Users.ToList(); // دریافت لیست کاربران
+            ViewBag.Roles = roles.Select(r => r.Name).ToList(); // لیست نقش‌ها
+            return users;
+        }
+
     }
+
 }
